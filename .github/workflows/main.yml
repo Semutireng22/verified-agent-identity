@@ -2,40 +2,42 @@ name: Verify Human Identity
 
 on:
   workflow_dispatch:
-    inputs:
-      agent_name:
-        description: 'SkyX Agent'
-        required: true
-        default: 'SkyX Agent'
-      agent_description:
-        description: 'Agent for all your needs'
-        required: true
-        default: 'AI Agent'
 
 jobs:
   verify:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v3
+      - name: Checkout Repository
+        uses: actions/checkout@v4
 
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: 20
 
-      - name: Step 1 - Install ClawHub skill
-        run: npx clawhub@latest install verified-agent-identity
+      - name: Install ClawHub CLI
+        run: npm install -g clawhub
 
-      - name: Install script dependencies
+      - name: Install Verified Agent Identity Package
+        run: clawhub install verified-agent-identity
+
+      - name: Install Script Dependencies
+        working-directory: scripts
+        run: npm install
+
+      - name: Create Ethereum Identity
+        working-directory: scripts
+        run: node createNewEthereumIdentity.js
+
+      - name: Link Human to Agent
+        working-directory: scripts
         run: |
-          cd scripts
-          npm install
+          node manualLinkHumanToAgent.js \
+          --challenge '{
+            "name": "SynapseID",
+            "description": "SynapseID is an autonomous identity intelligence agent that connects human authenticity with machine cognition. It establishes verifiable trust signals, strengthens reputation graphs, and enables secure onboarding of agents within decentralized ecosystems."
+          }'
 
-      - name: Step 2 - Create new Ethereum Identity
-        run: node scripts/createNewEthereumIdentity.js
-
-      - name: Step 3 - Link Human to Agent
-        run: |
-          node scripts/manualLinkHumanToAgent.js --challenge '{"name": "Nama_Agen_Kamu", "description": "AI Agent"}'
+      - name: Debug Files (Optional but Recommended)
+        run: ls -R
