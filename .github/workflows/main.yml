@@ -2,42 +2,38 @@ name: Verify Human Identity
 
 on:
   workflow_dispatch:
+    inputs:
+      agent_name:
+        description: 'Akira Agent'
+        required: true
+        default: 'akira'
+      agent_description:
+        description: 'Akira Agent'
+        required: true
+        default: 'akira AI Agent'
 
 jobs:
   verify:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
+      - name: Checkout repo
+        uses: actions/checkout@v3
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v3
         with:
-          node-version: 20
+          node-version: '20'
 
-      - name: Install ClawHub CLI
-        run: npm install -g clawhub
-
-      - name: Install Verified Agent Identity Package
-        run: clawhub install verified-agent-identity
-
-      - name: Install Script Dependencies
-        working-directory: scripts
-        run: npm install
-
-      - name: Create Ethereum Identity
-        working-directory: scripts
-        run: node createNewEthereumIdentity.js
-
-      - name: Link Human to Agent
-        working-directory: scripts
+      - name: Install dependencies
         run: |
-          node manualLinkHumanToAgent.js \
-          --challenge '{
-            "name": "SynapseID",
-            "description": "SynapseID is an autonomous identity intelligence agent that connects human authenticity with machine cognition. It establishes verifiable trust signals, strengthens reputation graphs, and enables secure onboarding of agents within decentralized ecosystems."
-          }'
+          cd scripts
+          npm install
 
-      - name: Debug Files (Optional but Recommended)
-        run: ls -R
+      - name: Step 1 - Create new Ethereum Identity
+        run: node scripts/createNewEthereumIdentity.js
+
+      - name: Step 2 - Link Human to Agent
+        run: |
+          node scripts/manualLinkHumanToAgent.js \
+          --challenge "{\"name\": \"${{ github.event.inputs.agent_name }}\", \"description\": \"${{ github.event.inputs.agent_description }}\"}"
